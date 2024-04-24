@@ -13,13 +13,14 @@ import {
 import HttpError from "../helpers/HttpError.js";
 import validateBody from "../helpers/validateBody.js";
 
-export const getAllContacts = (_, res) => {
-  res.json(listContacts()).status(200);
+export const getAllContacts = async (_, res) => {
+  const contacts = await listContacts();
+  res.json(contacts).status(200);
 };
 
-export const getOneContact = (req, res) => {
+export const getOneContact = async (req, res) => {
   const { id } = req.params;
-  const contactToFind = getContactById(id);
+  const contactToFind = await getContactById(id);
   if (contactToFind !== null) {
     res.json(contactToFind).status(200);
   } else {
@@ -27,9 +28,9 @@ export const getOneContact = (req, res) => {
   }
 };
 
-export const deleteContact = (req, res) => {
+export const deleteContact = async (req, res) => {
   const { id } = req.params;
-  const contactToDelete = removeContact(id);
+  const contactToDelete = await removeContact(id);
   if (contactToDelete !== null) {
     res.json(contactToDelete).status(200);
   } else {
@@ -37,16 +38,16 @@ export const deleteContact = (req, res) => {
   }
 };
 
-export const createContact = (req, res) => {
+export const createContact = async (req, res) => {
   const { name, email, phone } = req.body;
 
   validateBody(createContactSchema);
 
-  const addedContact = addContact(name, email, phone);
+  const addedContact = await addContact(name, email, phone);
   res.json(addedContact).status(201);
 };
 
-export const updateContact = (req, res) => {
+export const updateContact = async (req, res) => {
   const { id } = req.params;
   const { name, email, phone } = req.body;
 
@@ -56,10 +57,10 @@ export const updateContact = (req, res) => {
 
   validateBody(updateContactSchema);
 
-  const contactToUpdate = getContactById(id);
+  const contactToUpdate = await getContactById(id);
 
   if (contactToUpdate !== null) {
-    const updatedContact = rewriteContact(contactToUpdate, {
+    const updatedContact = await rewriteContact(contactToUpdate, {
       name,
       email,
       phone,
