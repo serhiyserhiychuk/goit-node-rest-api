@@ -6,12 +6,7 @@ import {
   rewriteContact,
 } from "../services/contactsServices.js";
 
-import {
-  createContactSchema,
-  updateContactSchema,
-} from "../schemas/contactsSchemas.js";
 import HttpError from "../helpers/HttpError.js";
-import validateBody from "../helpers/validateBody.js";
 
 export const getAllContacts = async (_, res) => {
   const contacts = await listContacts();
@@ -41,8 +36,6 @@ export const deleteContact = async (req, res) => {
 export const createContact = async (req, res) => {
   const { name, email, phone } = req.body;
 
-  validateBody(createContactSchema);
-
   const addedContact = await addContact(name, email, phone);
   res.json(addedContact).status(201);
 };
@@ -54,8 +47,6 @@ export const updateContact = async (req, res) => {
   if (!name && !email && !phone) {
     res.json({ message: "Body must have at least one field" }).status(400);
   }
-
-  validateBody(updateContactSchema);
 
   const contactToUpdate = await getContactById(id);
 
