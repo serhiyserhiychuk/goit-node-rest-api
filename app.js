@@ -1,6 +1,8 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import mongoose from "mongoose";
+mongoose.Promise = global.Promise;
 
 import contactsRouter from "./routes/contactsRouter.js";
 
@@ -21,6 +23,17 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
-app.listen(3000, () => {
-  console.log("Server is running. Use our API on port: 3000");
-});
+const connection = mongoose.connect(
+  `mongodb+srv://serhiyserhiychuk07:dtiPSo0NciJWcaQc@cluster0.3k7x662.mongodb.net/db-contacts`
+);
+connection
+  .then(() => {
+    console.log("Database connection successful");
+    app.listen(3000, () => {
+      console.log("Server is running. Use our API on port: 3000");
+    });
+  })
+  .catch((err) => {
+    console.log(`Server not running. Error message: ${err.message}`);
+    process.exit(1);
+  });
