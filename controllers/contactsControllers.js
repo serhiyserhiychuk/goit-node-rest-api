@@ -61,3 +61,17 @@ export const updateContact = async (req, res) => {
     res.json(HttpError(404));
   }
 };
+
+export const updateStatusContact = async (req, res) => {
+  const { contactId } = req.params;
+  const { favorite } = req.body;
+
+  const contactToUpdate = await getContactById(contactId);
+
+  if (contactToUpdate !== null) {
+    contactToUpdate.favorite = favorite;
+    res.json(contactToUpdate).status(200);
+  } else {
+    res.json(HttpError(404));
+  }
+};
