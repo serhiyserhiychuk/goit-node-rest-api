@@ -19,4 +19,5 @@ export const updateContactSchema = Joi.object({
   }),
 
   phone: Joi.string().min(10).max(20),
-});
+  favorite: true || false,
+}).min(1);
