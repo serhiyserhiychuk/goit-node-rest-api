@@ -4,7 +4,7 @@ import {
   rewriteContact,
   addContact,
   removeContact,
-} from "../routes/services/contactsServices.js";
+} from "../services/contactsServices.js";
 
 import HttpError from "../helpers/HttpError.js";
 
