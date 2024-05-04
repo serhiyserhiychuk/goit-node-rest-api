@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import mongoose from "mongoose";
+import { PORT, DB_URI } from "./config.js";
 mongoose.Promise = global.Promise;
 
 import contactsRouter from "./routes/contactsRouter.js";
@@ -23,14 +24,12 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
-const connection = mongoose.connect(
-  `mongodb+srv://serhiyserhiychuk07:dtiPSo0NciJWcaQc@cluster0.3k7x662.mongodb.net/db-contacts`
-);
+const connection = mongoose.connect(DB_URI);
 connection
   .then(() => {
     console.log("Database connection successful");
-    app.listen(3000, () => {
-      console.log("Server is running. Use our API on port: 3000");
+    app.listen(PORT, () => {
+      console.log(`Server is running. Use our API on port: ${PORT}`);
     });
   })
   .catch((err) => {

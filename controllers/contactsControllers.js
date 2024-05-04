@@ -66,17 +66,16 @@ export const updateContact = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const contactToUpdate = await getContactById(id);
-
-    if (!contactToUpdate) {
-      throw HttpError(404);
-    }
-
-    const updatedContact = await rewriteContact(contactToUpdate, {
+    const updatedContact = await rewriteContact(id, {
       name: req.body.name,
       email: req.body.email,
       phone: req.body.phone,
     });
+
+    if (!updatedContact) {
+      throw HttpError(404);
+    }
+
     res.json(updatedContact).status(200);
   } catch (error) {
     next(error);
@@ -87,15 +86,14 @@ export const updateStatusContact = async (req, res, next) => {
   try {
     const { contactId } = req.params;
 
-    const contactToUpdate = await getContactById(contactId);
+    const updatedContact = await rewriteContact(contactId, {
+      favorite: req.body.favorite,
+    });
 
-    if (!contactToUpdate) {
+    if (!updatedContact) {
       throw HttpError(404);
     }
 
-    const updatedContact = await rewriteContact(contactToUpdate, {
-      favorite: req.body.favorite,
-    });
     res.json(updatedContact).status(200);
   } catch (error) {
     next(error);
