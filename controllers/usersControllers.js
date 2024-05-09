@@ -1,6 +1,11 @@
 import bcrypt from "bcrypt";
 import HttpError from "../helpers/HttpError.js";
-import { getUserByEmail, createUser } from "../services/usersServices.js";
+import {
+  getUserById,
+  getUserByEmail,
+  createUser,
+  updateUser,
+} from "../services/usersServices.js";
 import { SECRET } from "../config.js";
 import jwt from "jsonwebtoken";
 
@@ -44,10 +49,9 @@ export const login = async (req, res, next) => {
       throw HttpError(401, "Email or password is wrong");
     }
 
-    const payload = { id: user._id, email: user.email };
-    const token = jwt.sign(payload, SECRET);
+    const token = jwt.sign({ id: user._id, email: user.email }, SECRET);
 
-    user.token = token;
+    await updateUser(user.id, { token });
 
     res.status(200).send({
       token,
@@ -56,6 +60,36 @@ export const login = async (req, res, next) => {
         subscription: user.subscription,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    const user = await getUserById(req.user._id);
+
+    if (!user) {
+      throw HttpError(401, "Not authorized");
+    }
+
+    await updateUser(user._id, { token: null });
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCurrentUser = async (req, res, next) => {
+  try {
+    const user = await getUserById(req.user._id);
+
+    if (!user) {
+      throw HttpError(401, "Not authorized");
+    }
+    res
+      .status(200)
+      .send({ email: user.email, subscription: user.subscription });
   } catch (error) {
     next(error);
   }
