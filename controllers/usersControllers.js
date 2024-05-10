@@ -94,3 +94,24 @@ export const getCurrentUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const subscriptionUpdate = async (req, res, next) => {
+  try {
+    const user = await getUserById(req.user._id);
+
+    if (!user) {
+      throw HttpError(401, "Not authorized");
+    }
+
+    const updatedUser = await updateUser(user._id, {
+      subscription: req.body.subscription,
+    });
+
+    res.status(200).send({
+      email: updatedUser.email,
+      subscription: updatedUser.subscription,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
