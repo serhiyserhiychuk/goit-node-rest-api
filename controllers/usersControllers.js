@@ -67,13 +67,7 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    const user = await getUserById(req.user._id);
-
-    if (!user) {
-      throw HttpError(401, "Not authorized");
-    }
-
-    await updateUser(user._id, { token: null });
+    await updateUser(req.user._id, { token: null });
     res.status(204).end();
   } catch (error) {
     next(error);
@@ -84,12 +78,9 @@ export const getCurrentUser = async (req, res, next) => {
   try {
     const user = await getUserById(req.user._id);
 
-    if (!user) {
-      throw HttpError(401, "Not authorized");
-    }
     res
       .status(200)
-      .send({ email: user.email, subscription: user.subscription });
+      .json({ email: user.email, subscription: user.subscription });
   } catch (error) {
     next(error);
   }
@@ -97,13 +88,7 @@ export const getCurrentUser = async (req, res, next) => {
 
 export const subscriptionUpdate = async (req, res, next) => {
   try {
-    const user = await getUserById(req.user._id);
-
-    if (!user) {
-      throw HttpError(401, "Not authorized");
-    }
-
-    const updatedUser = await updateUser(user._id, {
+    const updatedUser = await updateUser(req.user._id, {
       subscription: req.body.subscription,
     });
 
