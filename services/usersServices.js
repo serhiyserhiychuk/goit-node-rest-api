@@ -10,8 +10,13 @@ export const getUserByEmail = async (email) => {
   return contactToFind;
 };
 
-export const createUser = async ({ email, password }) => {
-  const createdUser = await User.create({ email, password });
+export const getUserByToken = async (verificationToken) => {
+  const contactToFind = await User.findOne({ verificationToken });
+  return contactToFind;
+};
+
+export const createUser = async ({ email, password, verificationToken }) => {
+  const createdUser = await User.create({ email, password, verificationToken });
   return createdUser;
 };
 
