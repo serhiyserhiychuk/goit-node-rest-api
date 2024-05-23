@@ -5,13 +5,8 @@ export const getUserById = async (id) => {
   return contactToFind;
 };
 
-export const getUserByEmail = async (email) => {
-  const contactToFind = await User.findOne({ email });
-  return contactToFind;
-};
-
-export const getUserByToken = async (verificationToken) => {
-  const contactToFind = await User.findOne({ verificationToken });
+export const getUserByFilter = async (filter) => {
+  const contactToFind = await User.findOne(filter);
   return contactToFind;
 };
 

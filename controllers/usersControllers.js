@@ -4,8 +4,7 @@ import path from "node:path";
 import HttpError from "../helpers/HttpError.js";
 import {
   getUserById,
-  getUserByEmail,
-  getUserByToken,
+  getUserByFilter,
   createUser,
   updateUser,
 } from "../services/usersServices.js";
@@ -14,13 +13,11 @@ import jwt from "jsonwebtoken";
 import gravatar from "gravatar";
 import Jimp from "jimp";
 import { nanoid } from "nanoid";
-import sgMail from "@sendgrid/mail";
-import { SEND_GRID_API_KEY } from "../config.js";
-sgMail.setApiKey(SEND_GRID_API_KEY);
+import letterSender from "../helpers/letterSender.js";
 
 export const register = async (req, res, next) => {
   try {
-    const user = await getUserByEmail(req.body.email);
+    const user = await getUserByFilter({ email: req.body.email });
 
     if (user !== null) {
       throw HttpError(409, "Email in use");
@@ -41,17 +38,7 @@ export const register = async (req, res, next) => {
 
     await updateUser(createdUser.id, { avatarURL: httpUrl });
 
-    const link = `http://localhost:3000/api/users/verify/${createdUser.verificationToken}`;
-
-    const message = {
-      to: createdUser.email,
-      from: "serhiy20071@gmail.com",
-      subject: "Email Verification",
-      html: `<h1>Click this <a href=${link}>link</a> to verify your email.</h1>`,
-      text: `Follow this link to verify your email: ${link}`,
-    };
-
-    sgMail.send(message);
+    await letterSender(createdUser.email, createdUser.verificationToken);
 
     res.status(201).send({
       user: {
@@ -66,7 +53,7 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const user = await getUserByEmail(req.body.email);
+    const user = await getUserByFilter({ email: req.body.email });
 
     if (!user) {
       throw HttpError(401, "Email or password is wrong");
@@ -158,7 +145,9 @@ export const avatarUpdate = async (req, res, next) => {
 
 export const verify = async (req, res, next) => {
   try {
-    const user = await getUserByToken(req.params.verificationToken);
+    const user = await getUserByFilter({
+      verificationToken: req.params.verificationToken,
+    });
 
     if (!user) throw HttpError(404);
 
@@ -177,24 +166,14 @@ export const verify = async (req, res, next) => {
 
 export const resend = async (req, res, next) => {
   try {
-    const user = await getUserByEmail(req.body.email);
+    const user = await getUserByFilter({ email: req.body.email });
 
     if (!user) throw HttpError(404);
 
     if (user.verify)
       throw HttpError(400, "Verification has already been passed");
 
-    const link = `http://localhost:3000/api/users/verify/${user.verificationToken}`;
-
-    const message = {
-      to: user.email,
-      from: "serhiy20071@gmail.com",
-      subject: "Email Verification",
-      html: `<h1>Click this <a href=${link}>link</a> to verify your email.</h1>`,
-      text: `Follow this link to verify your email: ${link}`,
-    };
-
-    sgMail.send(message).then(console.log("send"));
+    await letterSender(user.email, user.verificationToken);
 
     res.status(200).json({
       message: "Verification email sent",
