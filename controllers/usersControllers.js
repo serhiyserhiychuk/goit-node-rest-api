@@ -4,7 +4,7 @@ import path from "node:path";
 import HttpError from "../helpers/HttpError.js";
 import {
   getUserById,
-  getUserByEmail,
+  getUserByFilter,
   createUser,
   updateUser,
 } from "../services/usersServices.js";
@@ -12,10 +12,12 @@ import { SECRET } from "../config.js";
 import jwt from "jsonwebtoken";
 import gravatar from "gravatar";
 import Jimp from "jimp";
+import { nanoid } from "nanoid";
+import letterSender from "../helpers/letterSender.js";
 
 export const register = async (req, res, next) => {
   try {
-    const user = await getUserByEmail(req.body.email);
+    const user = await getUserByFilter({ email: req.body.email });
 
     if (user !== null) {
       throw HttpError(409, "Email in use");
@@ -26,6 +28,7 @@ export const register = async (req, res, next) => {
     const createdUser = await createUser({
       email: req.body.email,
       password: passwordHash,
+      verificationToken: nanoid(),
     });
 
     const httpUrl = gravatar.url(createdUser.email, {
@@ -34,6 +37,8 @@ export const register = async (req, res, next) => {
     });
 
     await updateUser(createdUser.id, { avatarURL: httpUrl });
+
+    await letterSender(createdUser.email, createdUser.verificationToken);
 
     res.status(201).send({
       user: {
@@ -48,7 +53,7 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    const user = await getUserByEmail(req.body.email);
+    const user = await getUserByFilter({ email: req.body.email });
 
     if (!user) {
       throw HttpError(401, "Email or password is wrong");
@@ -58,6 +63,10 @@ export const login = async (req, res, next) => {
 
     if (!isMatch) {
       throw HttpError(401, "Email or password is wrong");
+    }
+
+    if (!user.verify) {
+      throw HttpError(401, "Email is not verified");
     }
 
     const token = jwt.sign({ id: user._id, email: user.email }, SECRET);
@@ -128,6 +137,46 @@ export const avatarUpdate = async (req, res, next) => {
 
     res.send({
       avatarURL: user.avatarURL,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verify = async (req, res, next) => {
+  try {
+    const user = await getUserByFilter({
+      verificationToken: req.params.verificationToken,
+    });
+
+    if (!user) throw HttpError(404);
+
+    await updateUser(user._id, {
+      verificationToken: null,
+      verify: true,
+    });
+
+    res.status(200).json({
+      message: "Verification successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resend = async (req, res, next) => {
+  try {
+    const user = await getUserByFilter({ email: req.body.email });
+
+    if (!user) throw HttpError(404);
+
+    if (user.verify)
+      throw HttpError(400, "Verification has already been passed");
+
+    await letterSender(user.email, user.verificationToken);
+
+    res.status(200).json({
+      message: "Verification email sent",
     });
   } catch (error) {
     next(error);

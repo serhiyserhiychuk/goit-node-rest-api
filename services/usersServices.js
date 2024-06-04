@@ -5,13 +5,13 @@ export const getUserById = async (id) => {
   return contactToFind;
 };
 
-export const getUserByEmail = async (email) => {
-  const contactToFind = await User.findOne({ email });
+export const getUserByFilter = async (filter) => {
+  const contactToFind = await User.findOne(filter);
   return contactToFind;
 };
 
-export const createUser = async ({ email, password }) => {
-  const createdUser = await User.create({ email, password });
+export const createUser = async ({ email, password, verificationToken }) => {
+  const createdUser = await User.create({ email, password, verificationToken });
   return createdUser;
 };
 
